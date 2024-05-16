@@ -346,14 +346,14 @@ void CommonParticipant::create_participant_(
     participant_att.builtin.typelookup_config.use_client = true;
 
     eprosima::fastrtps::rtps::Locator_t server_locator;
-    eprosima::fastrtps::rtps::IPLocator::setIPv4(server_locator, "127.0.0.1");
-    eprosima::fastrtps::rtps::IPLocator::setPhysicalPort(server_locator, 16166);
+    eprosima::fastrtps::rtps::IPLocator::setIPv4(server_locator, "0.0.0.0");
+    eprosima::fastrtps::rtps::IPLocator::setPhysicalPort(server_locator, 56543);
     server_locator.kind = LOCATOR_KIND_UDPv4;
 
     eprosima::fastrtps::rtps::RemoteServerAttributes remote_server_attr;
     remote_server_attr.metatrafficUnicastLocatorList.push_back(server_locator);
     // -- Set the GUID prefix to identify the server
-    remote_server_attr.ReadguidPrefix("44.53.00.5f.45.50.52.4f.53.49.4d.41");
+    remote_server_attr.ReadguidPrefix("44.53.00.5f.45.50.52.4f.53.49.4d.43");
     // -- Connect to the remote server
     participant_att.builtin.discovery_config.m_DiscoveryServers.push_back(remote_server_attr);
 
