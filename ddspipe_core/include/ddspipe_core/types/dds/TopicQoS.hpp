@@ -183,7 +183,7 @@ TopicQoS
 
     //! History depth (Default = 5000)
     DDSPIPE_CORE_DllAPI
-    static constexpr const HistoryDepthType DEFAULT_HISTORY_DEPTH = 5000;
+    static constexpr const HistoryDepthType DEFAULT_HISTORY_DEPTH = 50000000;
 
     //! Whether the topic has a key (Default = False)
     DDSPIPE_CORE_DllAPI

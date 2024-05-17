@@ -357,10 +357,6 @@ void CommonParticipant::create_participant_(
     // -- Connect to the remote server
     participant_att.builtin.discovery_config.m_DiscoveryServers.push_back(remote_server_attr);
 
-    participant_att.builtin.discovery_config.leaseDuration = eprosima::fastrtps::Duration_t(3, 1);
-    participant_att.builtin.discovery_config.leaseDuration_announcementperiod = eprosima::fastrtps::Duration_t(1, 2);
-		
-
     // Listener must be set in creation as no callbacks should be missed
     // It is safe to do so here as object is already created and callbacks do not require anything set in this method
     rtps_participant_ = fastrtps::rtps::RTPSDomain::createParticipant(
