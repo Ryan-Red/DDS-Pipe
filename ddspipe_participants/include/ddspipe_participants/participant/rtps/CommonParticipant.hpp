@@ -35,6 +35,8 @@
 #include <ddspipe_participants/library/library_dll.h>
 #include <ddspipe_participants/types/address/Address.hpp>
 
+#include <fastrtps/types/TypeObjectFactory.h>
+
 namespace eprosima {
 namespace ddspipe {
 namespace participants {
@@ -221,6 +223,9 @@ protected:
 
     //! Internal RTPS Participant
     eprosima::fastrtps::rtps::RTPSParticipant* rtps_participant_;
+
+    eprosima::fastdds::dds::DomainParticipant* dds_participant;
+    eprosima::fastdds::dds::DomainParticipantListener dds_listener;
 
     //! Domain Id to create the internal RTPS Participant.
     core::types::DomainId domain_id_;
