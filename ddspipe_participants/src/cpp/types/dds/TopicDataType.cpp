@@ -37,7 +37,7 @@ TopicDataType::TopicDataType(
     // Set topic data
     m_typeSize = 4;
     m_isGetKeyDefined = keyed_;
-    auto_fill_type_object(false);
+    auto_fill_type_object(true);
     auto_fill_type_information(false);
 
     // Set name

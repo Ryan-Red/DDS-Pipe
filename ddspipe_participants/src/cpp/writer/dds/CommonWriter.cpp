@@ -156,33 +156,33 @@ fastdds::dds::DataWriterQos CommonWriter::reckon_writer_qos_() const noexcept
 
     dds_publisher_->get_default_datawriter_qos();
 
-    qos.durability().kind =
-            (topic_.topic_qos.is_transient_local())
-            ? fastdds::dds::DurabilityQosPolicyKind::TRANSIENT_LOCAL_DURABILITY_QOS
-            : fastdds::dds::DurabilityQosPolicyKind::VOLATILE_DURABILITY_QOS;
+    // qos.durability().kind =
+    //         (topic_.topic_qos.is_transient_local())
+    //         ? fastdds::dds::DurabilityQosPolicyKind::TRANSIENT_LOCAL_DURABILITY_QOS
+    //         : fastdds::dds::DurabilityQosPolicyKind::VOLATILE_DURABILITY_QOS;
 
-    qos.reliability().kind =
-            (topic_.topic_qos.is_reliable())
-            ? fastdds::dds::ReliabilityQosPolicyKind::RELIABLE_RELIABILITY_QOS
-            : fastdds::dds::ReliabilityQosPolicyKind::BEST_EFFORT_RELIABILITY_QOS;
+    // qos.reliability().kind =
+    //         (topic_.topic_qos.is_reliable())
+    //         ? fastdds::dds::ReliabilityQosPolicyKind::RELIABLE_RELIABILITY_QOS
+    //         : fastdds::dds::ReliabilityQosPolicyKind::BEST_EFFORT_RELIABILITY_QOS;
 
-    qos.ownership().kind =
-            (topic_.topic_qos.has_ownership())
-            ? fastdds::dds::OwnershipQosPolicyKind::EXCLUSIVE_OWNERSHIP_QOS
-            : fastdds::dds::OwnershipQosPolicyKind::SHARED_OWNERSHIP_QOS;
+    // qos.ownership().kind =
+    //         (topic_.topic_qos.has_ownership())
+    //         ? fastdds::dds::OwnershipQosPolicyKind::EXCLUSIVE_OWNERSHIP_QOS
+    //         : fastdds::dds::OwnershipQosPolicyKind::SHARED_OWNERSHIP_QOS;
 
-    if (topic_.topic_qos.history_depth == 0U)
-    {
-        qos.history().kind = eprosima::fastdds::dds::HistoryQosPolicyKind::KEEP_ALL_HISTORY_QOS;
-    }
-    else
-    {
-        qos.history().kind = eprosima::fastdds::dds::HistoryQosPolicyKind::KEEP_LAST_HISTORY_QOS;
-        qos.history().depth = topic_.topic_qos.history_depth;
-    }
+    // if (topic_.topic_qos.history_depth == 0U)
+    // {
+    //     qos.history().kind = eprosima::fastdds::dds::HistoryQosPolicyKind::KEEP_ALL_HISTORY_QOS;
+    // }
+    // else
+    // {
+    //     qos.history().kind = eprosima::fastdds::dds::HistoryQosPolicyKind::KEEP_LAST_HISTORY_QOS;
+    //     qos.history().depth = topic_.topic_qos.history_depth;
+    // }
 
-    // Set minimum deadline so it matches with everything
-    qos.deadline().period = eprosima::fastrtps::Duration_t(0);
+    // // Set minimum deadline so it matches with everything
+    // qos.deadline().period = eprosima::fastrtps::Duration_t(0);
 
     return qos;
 }
