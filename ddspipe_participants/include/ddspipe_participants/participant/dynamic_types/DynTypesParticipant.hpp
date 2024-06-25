@@ -26,6 +26,7 @@
 #include <ddspipe_participants/participant/rtps/SimpleParticipant.hpp>
 #include <ddspipe_participants/reader/auxiliar/InternalReader.hpp>
 
+
 namespace eprosima {
 namespace ddspipe {
 namespace participants {
@@ -52,7 +53,6 @@ public:
 
     DDSPIPE_PARTICIPANTS_DllAPI
     virtual void init() override;
-
     /**
      * @brief Create a writer object
      *

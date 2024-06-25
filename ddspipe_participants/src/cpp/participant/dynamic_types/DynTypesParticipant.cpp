@@ -39,6 +39,9 @@
 
 #include <ddspipe_participants/participant/dynamic_types/DynTypesParticipant.hpp>
 
+
+#include <yaml-cpp/yaml.h>
+
 namespace eprosima {
 namespace ddspipe {
 namespace participants {
@@ -191,10 +194,16 @@ void DynTypesParticipant::initialize_internal_dds_participant_()
     eprosima::fastdds::dds::DomainParticipantQos pqos;
     pqos.name(this->id());
 
+    int domain = configuration->domain;
+    std::cout << "Domain is " << domain << std::endl;
+
     // Get server info from the yaml file
-    std::string server_ip = "0.0.0.0";
-    double server_port =  56543;
-    std::string server_guid_prefix = "44.53.00.5f.45.50.52.4f.53.49.4d.43";
+
+    YAML::Node config = YAML::LoadFile("/usr/include/dls2/util/messaging/servers.yaml");
+
+    std::string server_ip = config[domain]["ip"].as<std::string>();
+    double server_port = config[domain]["port"].as<double>();
+    std::string server_guid_prefix = config[domain]["guid_prefix"].as<std::string>();
 
     // Define server locator
     eprosima::fastrtps::rtps::Locator_t server_locator;
@@ -221,81 +230,10 @@ void DynTypesParticipant::initialize_internal_dds_participant_()
 
 
 
-    // // Set app properties
-    // pqos.properties().properties().emplace_back(
-    //     "fastdds.application.id",
-    //     configuration->app_id,
-    //     "true");
-    // pqos.properties().properties().emplace_back(
-    //     "fastdds.application.metadata",
-    //     configuration->app_metadata,
-    //     "true");
-
     // // Set Type LookUp to ON
     pqos.wire_protocol().builtin.typelookup_config.use_server = true;
     pqos.wire_protocol().builtin.typelookup_config.use_client = false;
-    
-    // // Configure Participant transports
-    // if (configuration->transport == core::types::TransportDescriptors::builtin)
-    // {
-    //     if (!configuration->whitelist.empty())
-    //     {
-    //         pqos.transport().use_builtin_transports = false;
 
-    //         std::shared_ptr<eprosima::fastdds::rtps::SharedMemTransportDescriptor> shm_transport =
-    //                 std::make_shared<eprosima::fastdds::rtps::SharedMemTransportDescriptor>();
-    //         pqos.transport().user_transports.push_back(shm_transport);
-
-    //         std::shared_ptr<eprosima::fastdds::rtps::UDPv4TransportDescriptor> udp_transport =
-    //                 create_descriptor<eprosima::fastdds::rtps::UDPv4TransportDescriptor>(configuration->whitelist);
-    //         pqos.transport().user_transports.push_back(udp_transport);
-    //     }
-    // }
-    // else if (configuration->transport == core::types::TransportDescriptors::shm_only)
-    // {
-    //     pqos.transport().use_builtin_transports = false;
-
-    //     std::shared_ptr<eprosima::fastdds::rtps::SharedMemTransportDescriptor> shm_transport =
-    //             std::make_shared<eprosima::fastdds::rtps::SharedMemTransportDescriptor>();
-    //     pqos.transport().user_transports.push_back(shm_transport);
-    // }
-    // else if (configuration->transport == core::types::TransportDescriptors::udp_only)
-    // {
-    //     pqos.transport().use_builtin_transports = false;
-
-    //     std::shared_ptr<eprosima::fastdds::rtps::UDPv4TransportDescriptor> udp_transport =
-    //             create_descriptor<eprosima::fastdds::rtps::UDPv4TransportDescriptor>(configuration->whitelist);
-    //     pqos.transport().user_transports.push_back(udp_transport);
-    // }
-
-    // // Participant discovery filter configuration
-    // switch (configuration->ignore_participant_flags)
-    // {
-    //     case core::types::IgnoreParticipantFlags::no_filter:
-    //         pqos.wire_protocol().builtin.discovery_config.ignoreParticipantFlags =
-    //                 eprosima::fastrtps::rtps::ParticipantFilteringFlags_t::NO_FILTER;
-    //         break;
-    //     case core::types::IgnoreParticipantFlags::filter_different_host:
-    //         pqos.wire_protocol().builtin.discovery_config.ignoreParticipantFlags =
-    //                 eprosima::fastrtps::rtps::ParticipantFilteringFlags_t::FILTER_DIFFERENT_HOST;
-    //         break;
-    //     case core::types::IgnoreParticipantFlags::filter_different_process:
-    //         pqos.wire_protocol().builtin.discovery_config.ignoreParticipantFlags =
-    //                 eprosima::fastrtps::rtps::ParticipantFilteringFlags_t::FILTER_DIFFERENT_PROCESS;
-    //         break;
-    //     case core::types::IgnoreParticipantFlags::filter_same_process:
-    //         pqos.wire_protocol().builtin.discovery_config.ignoreParticipantFlags =
-    //                 eprosima::fastrtps::rtps::ParticipantFilteringFlags_t::FILTER_SAME_PROCESS;
-    //         break;
-    //     case core::types::IgnoreParticipantFlags::filter_different_and_same_process:
-    //         pqos.wire_protocol().builtin.discovery_config.ignoreParticipantFlags =
-    //                 static_cast<eprosima::fastrtps::rtps::ParticipantFilteringFlags_t>(
-    //             eprosima::fastrtps::rtps::ParticipantFilteringFlags_t::FILTER_DIFFERENT_PROCESS |
-    //             eprosima::fastrtps::rtps::ParticipantFilteringFlags_t::FILTER_SAME_PROCESS);
-    //         break;
-    //     default:
-    //         break;
-    // }
 
     // Force DDS entities to be created disabled
     // NOTE: this is very dangerous because we are modifying a global variable (and a not thread safe one) in a

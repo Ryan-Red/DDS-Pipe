@@ -33,6 +33,8 @@
 #include <ddspipe_participants/configuration/SimpleParticipantConfiguration.hpp>
 #include <ddspipe_participants/library/library_dll.h>
 
+#include <yaml-cpp/yaml.h>
+
 namespace eprosima {
 namespace ddspipe {
 namespace participants {

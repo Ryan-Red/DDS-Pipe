@@ -357,10 +357,15 @@ fastdds::dds::DomainParticipantQos CommonParticipant::reckon_participant_qos_() 
 
     // qos.wire_protocol().builtin.discovery_config.discoveryProtocol =  eprosima::fastrtps::rtps::DiscoveryProtocol_t::SUPER_CLIENT;
     // qos.wire_protocol().builtin.typelookup_config.use_client = true;
+    int domain = configuration_->domain;
 
-    std::string server_ip = "0.0.0.0";
-    double server_port =  56543;
-    std::string server_guid_prefix = "44.53.00.5f.45.50.52.4f.53.49.4d.43";
+    std::cout << "domain we're working with is " << domain << std::endl;
+
+    YAML::Node config = YAML::LoadFile("/usr/include/dls2/util/messaging/servers.yaml");
+
+    std::string server_ip = config[domain]["ip"].as<std::string>();
+    double server_port = config[domain]["port"].as<double>();
+    std::string server_guid_prefix = config[domain]["guid_prefix"].as<std::string>();
 
     // Define server locator
     eprosima::fastrtps::rtps::Locator_t server_locator;

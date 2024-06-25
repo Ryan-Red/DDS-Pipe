@@ -35,6 +35,8 @@
 #include <ddspipe_participants/library/library_dll.h>
 #include <ddspipe_participants/types/address/Address.hpp>
 
+#include <yaml-cpp/yaml.h>
+
 namespace eprosima {
 namespace ddspipe {
 namespace participants {
