@@ -195,7 +195,6 @@ void DynTypesParticipant::initialize_internal_dds_participant_()
     pqos.name(this->id());
 
     int domain = configuration->domain;
-    std::cout << "Domain is " << domain << std::endl;
 
     // Get server info from the yaml file
 

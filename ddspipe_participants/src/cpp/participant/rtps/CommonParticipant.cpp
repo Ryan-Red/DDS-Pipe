@@ -347,8 +347,6 @@ void CommonParticipant::create_participant_(
 
     participant_att.builtin.typelookup_config.use_client = true;
 
-      std::cout << "domain we're working with is " << domain_int << " in the rtps stuff" << std::endl;
-
     YAML::Node config = YAML::LoadFile("/usr/include/dls2/util/messaging/servers.yaml");
 
     std::string server_ip = config[domain_int]["ip"].as<std::string>();

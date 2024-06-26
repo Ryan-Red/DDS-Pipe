@@ -111,7 +111,7 @@ bool CommonParticipant::is_repeater() const noexcept
     return false;
 }
 
-core::types::TopicQoS CommonParticipant::topic_qos() const noexcept
+core::types::TopicQoS CommonParticipant::topic_qos() const noexcept 
 {
     return configuration_->topic_qos;
 }
@@ -358,8 +358,6 @@ fastdds::dds::DomainParticipantQos CommonParticipant::reckon_participant_qos_() 
     // qos.wire_protocol().builtin.discovery_config.discoveryProtocol =  eprosima::fastrtps::rtps::DiscoveryProtocol_t::SUPER_CLIENT;
     // qos.wire_protocol().builtin.typelookup_config.use_client = true;
     int domain = configuration_->domain;
-
-    std::cout << "domain we're working with is " << domain << std::endl;
 
     YAML::Node config = YAML::LoadFile("/usr/include/dls2/util/messaging/servers.yaml");
 
