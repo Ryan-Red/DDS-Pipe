@@ -42,7 +42,7 @@
 #include <ddspipe_participants/writer/rtps/MultiWriter.hpp>
 #include <ddspipe_participants/writer/rtps/QoSSpecificWriter.hpp>
 #include <ddspipe_participants/writer/rtps/SimpleWriter.hpp>
-
+#include <ddspipe_participants/writer/dds/SimpleWriter.hpp>
 #include <utils/utils.hpp>
 
 namespace eprosima {
@@ -341,8 +341,11 @@ void CommonParticipant::create_participant_(
         
     int domain_int = domain;
 
+    eprosima::fastdds::dds::DomainParticipantQos participantQos;
+
     fastrtps::rtps::RTPSParticipantAttributes participant_att = participant_attributes;
     participant_att.builtin.discovery_config.discoveryProtocol = eprosima::fastrtps::rtps::DiscoveryProtocol_t::SUPER_CLIENT;
+    participantQos.wire_protocol().builtin.discovery_config.discoveryProtocol = eprosima::fastrtps::rtps::DiscoveryProtocol_t::SUPER_CLIENT;
     
 
     participant_att.builtin.typelookup_config.use_client = true;
@@ -365,6 +368,11 @@ void CommonParticipant::create_participant_(
     remote_server_attr.ReadguidPrefix(server_guid_prefix.c_str());
     // -- Connect to the remote server
     participant_att.builtin.discovery_config.m_DiscoveryServers.push_back(remote_server_attr);
+    participantQos.wire_protocol().builtin.discovery_config.m_DiscoveryServers.push_back(remote_server_attr);
+
+    auto udp_transport = std::make_shared<eprosima::fastdds::rtps::UDPv4TransportDescriptor>();
+		
+	participantQos.transport().user_transports.push_back(udp_transport);
 
     // Listener must be set in creation as no callbacks should be missed
     // It is safe to do so here as object is already created and callbacks do not require anything set in this method
@@ -378,6 +386,15 @@ void CommonParticipant::create_participant_(
         throw utils::InitializationException(
                   utils::Formatter() << "Error creating RTPS Participant " << this->id());
     }
+    eprosima::fastdds::dds::StatusMask mask;
+
+    dds_participant = eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->create_participant(
+        domain, 
+        participantQos,
+        &dds_listener,
+        mask.none()
+    );
+
 
     logInfo(DDSPIPE_RTPS_PARTICIPANT,
             "New Participant created with id " << this->id() <<
@@ -388,6 +405,7 @@ void CommonParticipant::create_participant_(
 std::shared_ptr<core::IWriter> CommonParticipant::create_writer(
         const core::ITopic& topic)
 {
+    std::cout << "creating the writer rn" << std::endl;
     // Can only create DDS Topics
     const core::types::DdsTopic* dds_topic_ptr = dynamic_cast<const core::types::DdsTopic*>(&topic);
     if (!dds_topic_ptr)
@@ -400,6 +418,7 @@ std::shared_ptr<core::IWriter> CommonParticipant::create_writer(
 
 
     std::cout << "Creating a Writer for Topic: " << dds_topic_ptr->topic_name() << std::endl;;
+    
 
 
     if (topic.internal_type_discriminator() == core::types::INTERNAL_TOPIC_TYPE_RPC)
@@ -418,8 +437,10 @@ std::shared_ptr<core::IWriter> CommonParticipant::create_writer(
     }
     else if (topic.internal_type_discriminator() == core::types::INTERNAL_TOPIC_TYPE_RTPS)
     {
+        std::cout << "rtps internal type" << std::endl;
         if (dds_topic.topic_qos.has_partitions() || dds_topic.topic_qos.has_ownership())
         {
+            std::cout << "has partitions or has ownership" << std::endl;
             // Notice that MultiWriter does not require an init call
             return std::make_shared<MultiWriter>(
                 this->id(),
@@ -430,12 +451,47 @@ std::shared_ptr<core::IWriter> CommonParticipant::create_writer(
         }
         else
         {
-            auto writer = std::make_shared<SimpleWriter>(
+            std::cout << "old fashioned way B)" << std::endl;
+
+
+            auto type_object = eprosima::fastrtps::types::TypeObjectFactory::get_instance()->get_type_object(dds_topic_ptr->type_name, true);
+
+
+
+            auto type_id =
+                    eprosima::fastrtps::types::TypeObjectFactory::get_instance()->get_type_identifier(dds_topic_ptr->type_name,
+                            true);
+
+
+            auto dyn_type = eprosima::fastrtps::types::TypeObjectFactory::get_instance()->build_dynamic_type(dds_topic_ptr->type_name,
+                            type_id,
+                            type_object);
+
+
+            eprosima::fastdds::dds::TypeSupport ts( new eprosima::fastrtps::types::DynamicPubSubType(dyn_type));
+            ts->setName("blind_state");
+
+            ts->auto_fill_type_information(false);
+            ts->auto_fill_type_object(true);
+            ts.register_type(dds_participant);
+
+
+            // dds_participant->register_type(ts);
+            auto dds_topic_info = dds_participant->create_topic(
+                dds_topic_ptr->topic_name(),
+                dds_topic_ptr->type_name, 
+                eprosima::fastdds::dds::TOPIC_QOS_DEFAULT);
+            std::cout <<  dds_topic_ptr->type_name << std::endl;
+            std::cout <<  dds_topic_ptr->topic_name() << std::endl;
+
+
+            std::cout << "created this kind of writer" << std::endl;
+            auto writer = std::make_shared<eprosima::ddspipe::participants::dds::SimpleWriter>(
                 this->id(),
                 dds_topic,
                 this->payload_pool_,
-                rtps_participant_,
-                this->configuration_->is_repeater);
+                dds_participant,
+                dds_topic_info);
             writer->init();
 
             return writer;
@@ -444,6 +500,7 @@ std::shared_ptr<core::IWriter> CommonParticipant::create_writer(
     else
     {
         logDevError(DDSPIPE_RTPS_PARTICIPANT, "Incorrect dds Topic in Writer creation.");
+        std::cout << "Incorrect dds Topic in Writer creation." << std::endl;
         return std::make_shared<BlankWriter>();
     }
 }
