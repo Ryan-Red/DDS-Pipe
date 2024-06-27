@@ -111,7 +111,7 @@ bool CommonParticipant::is_repeater() const noexcept
     return false;
 }
 
-core::types::TopicQoS CommonParticipant::topic_qos() const noexcept
+core::types::TopicQoS CommonParticipant::topic_qos() const noexcept 
 {
     return configuration_->topic_qos;
 }
@@ -120,10 +120,14 @@ std::shared_ptr<core::IWriter> CommonParticipant::create_writer(
         const core::ITopic& topic)
 {
     // Can only create DDS Topics
+
+    std::cout << "Creating a Writer for Topic: " << topic.topic_name() << std::endl;
+    
     const core::types::DdsTopic* topic_ptr = dynamic_cast<const core::types::DdsTopic*>(&topic);
     if (!topic_ptr)
     {
         logDebug(DDSPIPE_DDS_PARTICIPANT, "Not creating Writer for topic " << topic.topic_name());
+        std::cout <<  "Not creating Writer for topic " << topic.topic_name()<< std::endl;
         return std::make_shared<BlankWriter>();
     }
     const core::types::DdsTopic& dds_topic = *topic_ptr;
@@ -349,40 +353,70 @@ CommonParticipant::CommonParticipant(
 
 fastdds::dds::DomainParticipantQos CommonParticipant::reckon_participant_qos_() const
 {
-    auto qos = fastdds::dds::DomainParticipantFactory::get_instance()->get_default_participant_qos();
+    auto pqos = fastdds::dds::DomainParticipantFactory::get_instance()->get_default_participant_qos();
 
     // qos.wire_protocol().builtin.discovery_config.discoveryProtocol =  eprosima::fastrtps::rtps::DiscoveryProtocol_t::SUPER_CLIENT;
-    qos.wire_protocol().builtin.typelookup_config.use_client = true;
+    // qos.wire_protocol().builtin.typelookup_config.use_client = true;
+    int domain = configuration_->domain;
 
-    qos.properties().properties().emplace_back(
-        "fastdds.ignore_local_endpoints",
-        "true");
+    YAML::Node config = YAML::LoadFile("/usr/include/dls2/util/messaging/servers.yaml");
 
-    // Set app properties
-    qos.properties().properties().emplace_back(
-        "fastdds.application.id",
-        configuration_->app_id,
-        "true");
-    qos.properties().properties().emplace_back(
-        "fastdds.application.metadata",
-        configuration_->app_metadata,
-        "true");
+    std::string server_ip = config[domain]["ip"].as<std::string>();
+    double server_port = config[domain]["port"].as<double>();
+    std::string server_guid_prefix = config[domain]["guid_prefix"].as<std::string>();
 
-    return qos;
+    // Define server locator
+    eprosima::fastrtps::rtps::Locator_t server_locator;
+    eprosima::fastrtps::rtps::IPLocator::setIPv4(server_locator, server_ip);
+    eprosima::fastrtps::rtps::IPLocator::setPhysicalPort(server_locator, server_port);
+    server_locator.kind = LOCATOR_KIND_UDPv4;
+
+    // participantQos.wire_protocol().builtin.discovery_config.discoveryProtocol = eprosima::fastrtps::rtps::DiscoveryProtocol_t::SIMPLE;
+    // Set participant QoS depending on if it is a CLIENT, a SERVER or a SUPER CLIENT
+    pqos.wire_protocol().builtin.discovery_config.discoveryProtocol = eprosima::fastrtps::rtps::DiscoveryProtocol_t::SUPER_CLIENT;
+   
+    // -- Add the server locator in the metatraffic unicast locator list of the remote server attributes
+    eprosima::fastrtps::rtps::RemoteServerAttributes remote_server_attr;
+    remote_server_attr.metatrafficUnicastLocatorList.push_back(server_locator);
+    // -- Set the GUID prefix to identify the server
+    remote_server_attr.ReadguidPrefix(server_guid_prefix.c_str());
+    // -- Connect to the remote server
+    pqos.wire_protocol().builtin.discovery_config.m_DiscoveryServers.push_back(remote_server_attr);
+
+    pqos.wire_protocol().builtin.typelookup_config.use_server = true;
+    pqos.wire_protocol().builtin.typelookup_config.use_client = false;
+
+
+
+    // qos.properties().properties().emplace_back(
+    //     "fastdds.ignore_local_endpoints",
+    //     "true");
+
+    // // Set app properties
+    // qos.properties().properties().emplace_back(
+    //     "fastdds.application.id",
+    //     configuration_->app_id,
+    //     "true");
+    // qos.properties().properties().emplace_back(
+    //     "fastdds.application.metadata",
+    //     configuration_->app_metadata,
+    //     "true");
+
+    return pqos;
 }
 
 fastdds::dds::DomainParticipant* CommonParticipant::create_dds_participant_()
 {
     // Set listener mask so reader read its own messages
     fastdds::dds::StatusMask mask;
-    mask << fastdds::dds::StatusMask::publication_matched();
-    mask << fastdds::dds::StatusMask::subscription_matched();
+    // mask << fastdds::dds::StatusMask::publication_matched();
+    // mask << fastdds::dds::StatusMask::subscription_matched();
 
     return eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->create_participant(
         configuration_->domain,
         reckon_participant_qos_(),
         this,
-        mask);
+        mask.none());
 }
 
 fastdds::dds::Topic* CommonParticipant::topic_related_(

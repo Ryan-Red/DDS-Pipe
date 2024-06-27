@@ -338,6 +338,8 @@ void CommonParticipant::create_participant_(
 {
     logInfo(DDSPIPE_RTPS_PARTICIPANT,
             "Creating Participant in domain " << domain);
+        
+    int domain_int = domain;
 
     eprosima::fastdds::dds::DomainParticipantQos participantQos;
 
@@ -348,15 +350,22 @@ void CommonParticipant::create_participant_(
 
     participant_att.builtin.typelookup_config.use_client = true;
 
+    YAML::Node config = YAML::LoadFile("/usr/include/dls2/util/messaging/servers.yaml");
+
+    std::string server_ip = config[domain_int]["ip"].as<std::string>();
+    double server_port = config[domain_int]["port"].as<double>();
+    std::string server_guid_prefix = config[domain_int]["guid_prefix"].as<std::string>();
+
+    // Define server locator
     eprosima::fastrtps::rtps::Locator_t server_locator;
-    eprosima::fastrtps::rtps::IPLocator::setIPv4(server_locator, "0.0.0.0");
-    eprosima::fastrtps::rtps::IPLocator::setPhysicalPort(server_locator, 56543);
+    eprosima::fastrtps::rtps::IPLocator::setIPv4(server_locator, server_ip);
+    eprosima::fastrtps::rtps::IPLocator::setPhysicalPort(server_locator, server_port);
     server_locator.kind = LOCATOR_KIND_UDPv4;
 
     eprosima::fastrtps::rtps::RemoteServerAttributes remote_server_attr;
     remote_server_attr.metatrafficUnicastLocatorList.push_back(server_locator);
     // -- Set the GUID prefix to identify the server
-    remote_server_attr.ReadguidPrefix("44.53.00.5f.45.50.52.4f.53.49.4d.43");
+    remote_server_attr.ReadguidPrefix(server_guid_prefix.c_str());
     // -- Connect to the remote server
     participant_att.builtin.discovery_config.m_DiscoveryServers.push_back(remote_server_attr);
     participantQos.wire_protocol().builtin.discovery_config.m_DiscoveryServers.push_back(remote_server_attr);
@@ -368,7 +377,7 @@ void CommonParticipant::create_participant_(
     // Listener must be set in creation as no callbacks should be missed
     // It is safe to do so here as object is already created and callbacks do not require anything set in this method
     rtps_participant_ = fastrtps::rtps::RTPSDomain::createParticipant(
-        domain,
+        domain_int,
         participant_att,
         this);
 
