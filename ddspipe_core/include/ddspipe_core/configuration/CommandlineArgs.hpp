@@ -63,7 +63,7 @@ struct DDSPIPE_CORE_DllAPI CommandlineArgs
     // Filter for log messages
     utils::LogFilter log_filter;
 
-    int domain = 0;
+    int domain = 3;
 };
 
 } /* namespace core */
